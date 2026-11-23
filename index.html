@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DEADWEIGHT</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#cfd2d6;font-family:ui-monospace,Menlo,Consolas,monospace}
+  canvas{display:block}
+  .panel{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.84);z-index:20;text-align:center;gap:12px}
+  h1{letter-spacing:.4em;font-size:44px;margin:0;color:#c33;text-shadow:0 0 18px #600}
+  button,input{font:inherit;padding:10px 18px;background:#15181c;color:#ddd;border:1px solid #444;border-radius:4px}
+  button{cursor:pointer} button:hover{background:#262b31;border-color:#c33}
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:10;display:none}
+  #tl{position:absolute;top:14px;left:16px;min-width:230px;text-shadow:0 0 4px #000}
+  .bar{height:10px;background:rgba(0,0,0,.5);margin:4px 0 8px;border:1px solid #444}
+  .bar>div{height:100%;width:100%}
+  #hpb{background:#c33} #stb{background:#d9b13a}
+  #room{margin-top:6px;font-size:12px;letter-spacing:.2em;color:#9db0a8}
+  #tr{position:absolute;top:14px;right:16px;text-align:right;font-size:13px;opacity:.9;text-shadow:0 0 4px #000}
+  #cross{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2px;border-radius:50%;background:rgba(255,255,255,.6)}
+  #info{position:absolute;left:0;right:0;bottom:78px;text-align:center;font-size:16px;color:#fff;text-shadow:0 0 6px #000}
+  #hint{position:absolute;left:0;right:0;bottom:16px;text-align:center;font-size:12px;opacity:.6}
+  #feed{position:absolute;left:16px;bottom:16px;font-size:13px;max-width:360px}
+  #feed div{margin-top:4px;text-shadow:0 0 4px #000}
+  #banner{position:absolute;left:0;right:0;top:26%;text-align:center;font-size:28px;color:#fff;text-shadow:0 0 12px #000;padding:0 20px}
+  #hit{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(120,0,0,.1) 30%,rgba(200,0,0,.9) 100%);opacity:0}
+  #mini{position:absolute;right:16px;bottom:16px;width:190px;height:190px;border-radius:2px;opacity:.92}
+  #minilabel{position:absolute;right:16px;bottom:210px;font-size:11px;opacity:.55;width:190px;text-align:right}
+  #bigmap{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:15;pointer-events:none}
+  #bigmap canvas{width:min(80vh,80vw);height:min(80vh,80vw);box-shadow:0 0 40px #000}
+</style>
+</head>
+<body>
+<div id="lobby" class="panel">
+  <h1>DEADWEIGHT</h1>
+  <div style="opacity:.7;max-width:540px">Loot the manor. Haul it back to the green pad. Don't make noise. Don't get caught.</div>
+  <button id="solo">PLAY SOLO</button>
+  <button id="host">HOST CO-OP GAME</button>
+  <div><input id="code" placeholder="paste host code"> <button id="join">JOIN</button></div>
+  <div id="status" style="min-height:20px;color:#d9b13a"></div>
+</div>
+<div id="resume" class="panel" style="display:none"><h1 style="font-size:28px">PAUSED</h1><div>Click to resume</div></div>
+<div id="hud">
+  <div id="hit"></div>
+  <div id="tl">
+    <div id="lvl">LEVEL 1</div>
+    <div id="quota">$0 / $0</div>
+    <div class="bar"><div id="qb" style="background:#3c9;width:0%"></div></div>
+    HEALTH<div class="bar"><div id="hpb"></div></div>
+    STAMINA<div class="bar"><div id="stb"></div></div>
+    <div id="room"></div>
+  </div>
+  <div id="tr"><div id="codeShow"></div><div id="plist"></div></div>
+  <div id="cross"></div>
+  <div id="info"></div>
+  <div id="banner"></div>
+  <div id="feed"></div>
+  <div id="minilabel">[M] full map</div>
+  <canvas id="mini" width="190" height="190"></canvas>
+  <div id="hint">WASD move - SHIFT sprint - mouse look - hold LMB grab - RMB throw - M map - noise attracts monsters</div>
+</div>
+<div id="bigmap"><canvas id="bigcv" width="640" height="640"></canvas></div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
