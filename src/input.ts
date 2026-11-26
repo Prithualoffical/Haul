@@ -32,6 +32,10 @@ export function fireFlareInput(): void {
   if (S.me && S.me.alive) S.me.flN++;
 }
 
+export function toggleCartInput(): void {
+  if (S.me && S.me.alive) S.me.cartN++;
+}
+
 export function initInput(): void {
   addEventListener('keydown', e => {
     if (e.repeat) return;
@@ -40,6 +44,7 @@ export function initInput(): void {
     if (e.code === 'KeyM') S.showMap = !S.showMap;
     if (e.code === 'KeyV') toggleMic();
     if (e.code === 'KeyF') fireFlareInput();
+    if (e.code === 'KeyC') toggleCartInput();
     if (S.isHost) {
       if (S.phase === 'clear') {
         const m = /^Digit([1-9])$/.exec(e.code);

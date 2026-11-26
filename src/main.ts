@@ -1,5 +1,6 @@
 import { audioStart, audioUpdate } from './audio';
 import { clientSend, onServerMsg } from './client';
+import { DIFFICULTIES } from './config';
 import { render, updateDust } from './gfx';
 import { feed, setShopHandlers, updateHUD } from './hud';
 import { initInput, lockPointer, moveLocal } from './input';
@@ -9,7 +10,7 @@ import { saveSettings, isTouch, settings } from './settings';
 import { hostBroadcast, hostBuy, hostContinue, hostLoadLevel, hostRestart, hostStep, onPlayerData, onPlayerJoin, onPlayerLeave } from './sim';
 import { newPlayer, S } from './state';
 import { initTouch } from './touch';
-import type { MapChoice } from './types';
+import type { Difficulty, MapChoice } from './types';
 import { updateVisuals } from './visuals';
 import { initVoice, updateVoice } from './voice';
 
@@ -30,6 +31,8 @@ function startHost(online: boolean): void {
   S.isHost = true;
   S.myId = 'host';
   S.mapChoice = $<HTMLSelectElement>('mapsel').value as MapChoice;
+  S.difficulty = $<HTMLSelectElement>('diffsel').value as Difficulty;
+  S.flares = DIFFICULTIES[S.difficulty].startFlares;
   const me = newPlayer('host', 0);
   S.me = me;
   S.players.set('host', me);

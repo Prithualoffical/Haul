@@ -68,6 +68,7 @@
   #tb-throw{right:122px;bottom:60px}
   #tb-use{right:122px;bottom:150px}
   #tb-flare{right:26px;bottom:220px}
+  #tb-cart{right:122px;bottom:240px}
   #tb-map{right:26px;top:70px;width:52px;height:52px}
 </style>
 </head>
@@ -85,6 +86,12 @@
       <option value="warehouse">Port 9 Cargo Terminal</option>
       <option value="hotel">Grand Ostara Hotel</option>
     </select>
+    <label for="diffsel">Difficulty:</label>
+    <select id="diffsel">
+      <option value="easy">Easy</option>
+      <option value="hard" selected>Hard</option>
+      <option value="difficult">Difficult</option>
+    </select>
   </div>
   <div class="row"><button id="solo">PLAY SOLO</button><button id="host">HOST CO-OP GAME</button></div>
   <div class="row"><input id="code" placeholder="room code, e.g. K7QP2" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase;letter-spacing:.2em;width:180px;text-align:center"> <button id="join">JOIN</button></div>
@@ -93,7 +100,8 @@
   <div id="how">
     <b>Goal:</b> reach the money quota by bringing valuables onto the green extraction pad.<br>
     <b>Move:</b> WASD, Shift to sprint (uses stamina). <b>Grab:</b> hold left mouse. <b>Throw:</b> right mouse. Rough handling lowers an item's value.<br>
-    <b>Noise:</b> running and crashing items attract monsters. Walk slowly near them. Monsters sleep for the first 28 seconds.<br>
+    <b>Carriage [C]:</b> push the utility carriage around the building. Drop valuables near it to load up to 6 items safely, then wheel it onto the green pad.<br>
+    <b>Noise:</b> running and crashing items attract monsters. Walk slowly near them. Monsters sleep during the start grace period.<br>
     <b>Flares [F]:</b> stun monsters for 3.5s so you can escape. Buy more in the shop.<br>
     <b>Revive [hold E]:</b> stand next to a dead teammate for 3 seconds.<br>
     <b>Voice [V]:</b> mute/unmute your mic. Teammates sound quieter and directional with distance. Allow the mic when asked.<br>
@@ -142,7 +150,7 @@
   <div id="feed"></div>
   <div id="minilabel">[M] full map</div>
   <canvas id="mini" width="190" height="190"></canvas>
-  <div id="hint">WASD move - SHIFT sprint - hold LMB grab - RMB throw - E revive - F flare - V mic - M map</div>
+  <div id="hint">WASD move - SHIFT sprint - hold LMB grab - RMB throw - C carriage - E revive - F flare - V mic - M map</div>
   <div id="shop">
     <h2>SAFEHOUSE SHOP</h2>
     <div id="wallet"></div>
@@ -159,6 +167,7 @@
   <button class="tb" id="tb-throw">THROW</button>
   <button class="tb" id="tb-use">REVIVE</button>
   <button class="tb" id="tb-flare">FLARE</button>
+  <button class="tb" id="tb-cart">CART</button>
   <button class="tb" id="tb-map">MAP</button>
 </div>
 <script type="module" src="/src/main.ts"></script>

@@ -136,6 +136,26 @@ fresh(1, 'warehouse'); me = S.me!; S.levelTime = 99; let out = 0;
 for (let i = 0; i < 4000; i++) { sim.hostStep(0.05); for (const mm of S.monsters) if (mm.x < 0 || mm.z < 0 || mm.x > S.map!.size || mm.z > S.map!.size || !S.nav!.isFree(mm.x, mm.z) && false) out++; if (!me.alive) { me.alive = true; me.hp = 100; me.inv = 3; } }
 ok(out === 0, 'monsters stay in bounds for 200 simulated seconds');
 
+// 10) difficulty levels scale quota and monster count
+S.difficulty = 'easy'; fresh(1); const qEasy = S.quota, mEasy = S.monsters.length;
+S.difficulty = 'difficult'; fresh(1); const qDiff = S.quota, mDiff = S.monsters.length;
+ok(qDiff > qEasy && mDiff > mEasy, `difficulty scales quota (${qEasy}->${qDiff}) and monsters (${mEasy}->${mDiff})`);
+S.difficulty = 'easy';
+
+// 11) carriage vehicle: hitch, load item, and extract on pad
+fresh(1); me = S.me!; S.monsters.length = 0;
+me.x = S.cart.x + 1.0; me.z = S.cart.z; me.yaw = 0;
+me.cartN++; sim.hostStep(0.05);
+ok(S.cart.driver === me.id && S.cart.driverIdx === me.idx, 'player hitches carriage');
+const it = S.items[0];
+it.pos.set(S.cart.x, 0.5, S.cart.z); it.body!.position.set(S.cart.x, 0.5, S.cart.z);
+sim.hostStep(0.05);
+ok(it.cartSlot === 0, `item loads into carriage slot (${it.cartSlot})`);
+// move player so carriage lands on the extraction pad
+me.x = 5; me.z = 6.45; me.yaw = 0;
+stepFor(1.2);
+ok(it.state === 1 && S.banked > 0, `carriage item extracts on pad (state ${it.state}, banked ${S.banked})`);
+
 console.log(bad === 0 ? 'ALL HEADLESS SIM TESTS PASSED' : `FAILURES: ${bad}`);
 if (bad) throw new Error(`${bad} headless failures`);
 });

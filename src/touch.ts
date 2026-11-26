@@ -1,4 +1,4 @@
-import { fireFlareInput, keys, lookBy, touchBtn, touchMove } from './input';
+import { fireFlareInput, keys, lookBy, toggleCartInput, touchBtn, touchMove } from './input';
 import { settings } from './settings';
 import { S } from './state';
 
@@ -76,5 +76,6 @@ export function initTouch(): void {
   bind('tb-throw', () => { if (S.me) S.me.thrN++; });
   bind('tb-use', () => { touchBtn.use = true; }, () => { touchBtn.use = false; });
   bind('tb-flare', () => fireFlareInput());
+  bind('tb-cart', () => toggleCartInput());
   bind('tb-map', () => { S.showMap = !S.showMap; });
 }

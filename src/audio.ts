@@ -81,7 +81,10 @@ export function setListener(x: number, y: number, z: number, yaw: number): void 
 /* ------------------------------------------------------------------ */
 interface Voice { osc: OscillatorNode; lfo: OscillatorNode; gain: GainNode; panner: PannerNode }
 const voices: Voice[] = [];
-const BASE_PITCH: Record<MonsterKind, number> = { stalker: 70, runner: 120, brute: 42, listener: 95 };
+const BASE_PITCH: Record<MonsterKind, number> = {
+  stalker: 70, runner: 120, brute: 42, listener: 95,
+  crawler: 145, phantom: 185, warden: 34,
+};
 
 function makeVoice(): Voice | null {
   if (!ctx || !master) return null;

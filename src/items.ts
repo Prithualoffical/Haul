@@ -14,7 +14,7 @@ export function makeItem(i: number, type: number): Item {
   const it: Item = {
     i, type, def, pos: new THREE.Vector3(), quat: new THREE.Quaternion(),
     state: 0, frac: 1, hp: def.hp, zt: 0, r: Math.max(...def.size) / 2 + 0.1,
-    body: null, broke: false, lastHit: 0, view, seen: false,
+    body: null, broke: false, lastHit: 0, view, seen: false, cartSlot: -1,
   };
   S.items.push(it);
   return it;

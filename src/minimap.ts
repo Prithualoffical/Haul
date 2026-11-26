@@ -63,6 +63,18 @@ export function drawMap(ctx: CanvasRenderingContext2D, px: number, big: boolean)
   ctx.fillStyle = 'rgba(40,220,130,0.55)';
   ctx.fillRect(PAD.x1 * k, PAD.z1 * k, (PAD.x2 - PAD.x1) * k, (PAD.z2 - PAD.z1) * k);
 
+  // carriage vehicle
+  {
+    const c = S.cart;
+    ctx.save();
+    ctx.translate(c.x * k, c.z * k);
+    ctx.rotate(-c.yaw);
+    const cw = Math.max(4, 1.1 * k), ch = Math.max(6, 1.6 * k);
+    ctx.fillStyle = c.driverIdx >= 0 ? '#44e5ff' : '#ffbb33';
+    ctx.fillRect(-cw / 2, -ch / 2, cw, ch);
+    ctx.restore();
+  }
+
   // hunting monsters near any player
   const mons = S.isHost
     ? S.monsters.map(m => ({ x: m.x, z: m.z, chasing: m.state === 'chase' }))

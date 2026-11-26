@@ -1,4 +1,4 @@
-import type { ItemDef, MonsterKind } from './types';
+import type { Difficulty, ItemDef, MonsterKind } from './types';
 
 export const ROOM = 13;
 export const WALL_H = 3.5;
@@ -36,13 +36,33 @@ export interface MonsterDef {
   damage: number; cooldown: number; reach: number; scale: number;
 }
 export const MONSTER_DEFS: Record<MonsterKind, MonsterDef> = {
-  stalker:  { name: 'Stalker',  chase: 3.2, investigate: 2.2, patrol: 1.4, vision: 13, hearing: 1.0, damage: 15, cooldown: 1.5, reach: 1.3, scale: 1.0 },
-  runner:   { name: 'Runner',   chase: 4.3, investigate: 3.0, patrol: 2.1, vision: 10, hearing: 0.9, damage: 8,  cooldown: 1.1, reach: 1.2, scale: 0.88 },
-  brute:    { name: 'Brute',    chase: 2.6, investigate: 1.8, patrol: 1.1, vision: 11, hearing: 0.8, damage: 30, cooldown: 2.2, reach: 1.6, scale: 1.3 },
-  listener: { name: 'Listener', chase: 3.4, investigate: 2.8, patrol: 1.6, vision: 3,  hearing: 1.9, damage: 18, cooldown: 1.6, reach: 1.3, scale: 1.05 },
+  stalker:  { name: 'Stalker',  chase: 3.2,  investigate: 2.2, patrol: 1.4, vision: 13, hearing: 1.0, damage: 15, cooldown: 1.5, reach: 1.3,  scale: 1.0 },
+  runner:   { name: 'Runner',   chase: 4.3,  investigate: 3.0, patrol: 2.1, vision: 10, hearing: 0.9, damage: 8,  cooldown: 1.1, reach: 1.2,  scale: 0.88 },
+  brute:    { name: 'Brute',    chase: 2.6,  investigate: 1.8, patrol: 1.1, vision: 11, hearing: 0.8, damage: 30, cooldown: 2.2, reach: 1.6,  scale: 1.3 },
+  listener: { name: 'Listener', chase: 3.4,  investigate: 2.8, patrol: 1.6, vision: 3,  hearing: 1.9, damage: 18, cooldown: 1.6, reach: 1.3,  scale: 1.05 },
+  crawler:  { name: 'Crawler',  chase: 3.3,  investigate: 2.7, patrol: 1.9, vision: 9,  hearing: 1.2, damage: 12, cooldown: 1.0, reach: 1.15, scale: 0.78 },
+  phantom:  { name: 'Phantom',  chase: 3.25, investigate: 2.4, patrol: 1.5, vision: 15, hearing: 1.2, damage: 20, cooldown: 1.7, reach: 1.35, scale: 1.08 },
+  warden:   { name: 'Warden',   chase: 2.4,  investigate: 1.9, patrol: 1.0, vision: 12, hearing: 1.3, damage: 28, cooldown: 2.0, reach: 1.7,  scale: 1.42 },
 };
-export const MONSTER_ORDER: MonsterKind[] = ['stalker', 'listener', 'runner', 'brute', 'stalker', 'listener'];
-export const MONSTER_KIND_INDEX: MonsterKind[] = ['stalker', 'runner', 'brute', 'listener'];
+export const MONSTER_ORDER: MonsterKind[] = ['stalker', 'crawler', 'listener', 'runner', 'phantom', 'brute', 'warden'];
+export const MONSTER_KIND_INDEX: MonsterKind[] = ['stalker', 'runner', 'brute', 'listener', 'crawler', 'phantom', 'warden'];
+
+export interface DifficultyDef {
+  name: string; graceSeconds: number; speedMul: number; dmgMul: number;
+  senseMul: number; extraMonsters: number; quotaMul: number; startFlares: number;
+}
+export const DIFFICULTIES: Record<Difficulty, DifficultyDef> = {
+  easy:      { name: 'Easy',      graceSeconds: 28, speedMul: 0.9,  dmgMul: 0.8,  senseMul: 0.85, extraMonsters: 0, quotaMul: 0.85, startFlares: 2 },
+  hard:      { name: 'Hard',      graceSeconds: 20, speedMul: 1.05, dmgMul: 1.0,  senseMul: 1.05, extraMonsters: 1, quotaMul: 1.05, startFlares: 1 },
+  difficult: { name: 'Difficult', graceSeconds: 12, speedMul: 1.2,  dmgMul: 1.35, senseMul: 1.25, extraMonsters: 2, quotaMul: 1.25, startFlares: 1 },
+};
+
+export const CART_SLOTS = 6;
+export const CART_OFFSETS: ReadonlyArray<readonly [number, number]> = [
+  [-0.24, -0.38], [0.24, -0.38],
+  [-0.24,  0.0],  [0.24,  0.0],
+  [-0.24,  0.38], [0.24,  0.38],
+];
 
 export const BAL = {
   graceSeconds: 28,        // monsters only wander slowly at level start

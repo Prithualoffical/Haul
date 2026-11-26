@@ -3,6 +3,7 @@ import type * as CANNON from 'cannon-es';
 import type { Nav } from './nav';
 
 export type Phase = 'play' | 'clear' | 'dead';
+export type Difficulty = 'easy' | 'hard' | 'difficult';
 export type Sfx = 'extract' | 'break' | 'death' | 'hit' | 'flare' | 'revive' | 'buy';
 
 export type MapKind = 'manor' | 'asylum' | 'facility' | 'warehouse' | 'hotel';
@@ -51,6 +52,13 @@ export interface Item {
   frac: number; hp: number; zt: number; r: number;
   body: CANNON.Body | null; broke: boolean; lastHit: number;
   view: ItemView | null; seen: boolean;
+  cartSlot: number;          // -1 = loose, 0..5 = riding in carriage
+}
+
+export interface Cart {
+  x: number; z: number; yaw: number;
+  driver: string | null;
+  driverIdx: number;
 }
 
 export interface Upgrades { sta: number; str: number; spd: number; lamp: number; vit: number }
@@ -61,13 +69,14 @@ export interface Player {
   hp: number; alive: boolean; stam: number;
   grab: boolean; thrN: number; lastThr: number; wasGrab: boolean;
   use: boolean; flN: number; lastFl: number;
+  cartN: number; lastCart: number;
   held: Item | null; hd: number; mv: number; nt: number;
   inv: number;      // seconds of damage immunity left
   rev: number;      // revive progress in seconds (while dead)
 }
 export interface RemotePlayer { x: number; z: number; yaw: number; alive: boolean; idx: number; rev: number }
 
-export type MonsterKind = 'stalker' | 'runner' | 'brute' | 'listener';
+export type MonsterKind = 'stalker' | 'runner' | 'brute' | 'listener' | 'crawler' | 'phantom' | 'warden';
 export type MonsterMode = 'patrol' | 'investigate' | 'chase';
 export interface Monster {
   kind: MonsterKind; x: number; z: number; yaw: number; state: MonsterMode;
@@ -80,15 +89,16 @@ export interface GameState {
   started: boolean; isHost: boolean; myId: string; hostPeerId: string; me: Player | null;
   players: Map<string, Player>; remote: Map<string, RemotePlayer>;
   monsters: Monster[]; mview: MonsterView[]; items: Item[];
+  cart: Cart;
   map: MapData | null; nav: Nav | null; world: CANNON.World | null;
   level: number; quota: number; banked: number; phase: Phase; upg: Upgrades;
-  wallet: number; flares: number; mapChoice: MapChoice; levelTime: number;
+  wallet: number; flares: number; mapChoice: MapChoice; difficulty: Difficulty; levelTime: number;
   armTime: number; lastSeed: number; explored: Set<number>; showMap: boolean;
 }
 
 /* ---------- network messages ---------- */
 export interface LvlMsg {
-  t: 'lvl'; seed: number; kind: MapKind; L: number; q: number; up: Upgrades; w: number; fl: number;
+  t: 'lvl'; seed: number; kind: MapKind; diff: Difficulty; L: number; q: number; up: Upgrades; w: number; fl: number;
   items: number[]; you: string | null; sp: [number, number] | null; idx: number; hid: string;
 }
 /** [id, x, z, yaw, hp, alive, idx, revive progress seconds] */
@@ -97,11 +107,11 @@ export type SnapPlayer = [string, number, number, number, number, number, number
 export type SnapMonster = [number, number, number, number, number, number];
 export interface SnapMsg {
   t: 's'; ph: Phase; b: number; q: number; L: number; up: Upgrades; w: number; fl: number;
-  p: SnapPlayer[]; i: number[][]; m: SnapMonster[];
+  p: SnapPlayer[]; i: number[][]; m: SnapMonster[]; c: [number, number, number, number];
 }
 export interface TextMsg { t: 'msg'; m: string; sfx?: Sfx; fx?: [number, number] }
 export type ServerMsg = LvlMsg | SnapMsg | TextMsg;
 export interface InputMsg {
   t: 'in'; x: number; z: number; yaw: number; pitch: number; grab: boolean; thrN: number; mv: number;
-  use: boolean; flN: number;
+  use: boolean; flN: number; cartN: number;
 }

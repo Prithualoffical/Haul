@@ -29,8 +29,10 @@ export function onServerMsg(d: unknown, begin: () => void): void {
 
 function applyLevel(d: LvlMsg, begin: () => void): void {
   S.isHost = false;
+  S.difficulty = d.diff ?? 'easy';
   S.level = d.L; S.quota = d.q; S.banked = 0; S.upg = d.up; S.phase = 'play';
   S.wallet = d.w; S.flares = d.fl; S.levelTime = 0;
+  S.cart = { x: 6.4, z: 4.5, yaw: -2.36, driver: null, driverIdx: -1 };
   S.lastSeed = d.seed;
   S.hostPeerId = d.hid;
   const map = generateMap(d.seed, d.kind);        // deterministic: identical to the host's map
@@ -78,6 +80,10 @@ function applySnapshot(d: SnapMsg): void {
   S.mview = d.m.map(a => ({
     x: a[0], z: a[1], yaw: a[2], chasing: a[3] === 1, kind: MONSTER_KIND_INDEX[a[4]] ?? 'stalker', stunned: a[5] === 1,
   }));
+  if (d.c) {
+    S.cart.x = d.c[0]; S.cart.z = d.c[1]; S.cart.yaw = d.c[2]; S.cart.driverIdx = d.c[3];
+    S.cart.driver = d.c[3] === me.idx ? S.myId : null;
+  }
 }
 
 let netT = 0;
@@ -89,6 +95,6 @@ export function clientSend(dt: number): void {
   netT = 0;
   sendToHost({
     t: 'in', x: me.x, z: me.z, yaw: me.yaw, pitch: me.pitch, grab: me.grab, thrN: me.thrN, mv: me.mv,
-    use: me.use, flN: me.flN,
+    use: me.use, flN: me.flN, cartN: me.cartN,
   });
 }

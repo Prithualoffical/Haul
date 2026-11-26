@@ -12,6 +12,57 @@ interface Tracked { actor: Actor; kind: MonsterKind | null; lx: number; lz: numb
 const avatars = new Map<string, Tracked>();
 const monsters: Tracked[] = [];
 
+/** 3D Carriage Vehicle (utility hand-cart for hauling multiple valuables at once). */
+const cartVisual = ((): {
+  group: THREE.Group; wheels: THREE.Mesh[]; beacon: THREE.MeshBasicMaterial; lx: number; lz: number;
+} => {
+  const g = new THREE.Group();
+  const steel = new THREE.MeshStandardMaterial({ color: 0x2a2f36, roughness: 0.65, metalness: 0.45 });
+  const wood = new THREE.MeshStandardMaterial({ color: 0x5c3e26, roughness: 0.85 });
+  const tire = new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: 0.9 });
+  const beacon = new THREE.MeshBasicMaterial({ color: 0x44ee88 });
+
+  const addBox = (w: number, h: number, d: number, mat: THREE.Material, x: number, y: number, z: number): void => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z);
+    m.castShadow = true;
+    m.receiveShadow = true;
+    g.add(m);
+  };
+
+  // Flatbed + side rails (open top so loaded valuables are visible)
+  addBox(1.06, 0.08, 1.56, wood, 0, 0.28, 0);
+  addBox(1.12, 0.08, 1.62, steel, 0, 0.22, 0);
+  // Corner posts
+  for (const sx of [-0.52, 0.52]) for (const sz of [-0.76, 0.76]) addBox(0.06, 0.42, 0.06, steel, sx, 0.49, sz);
+  // Top rails (left, right, front)
+  addBox(0.05, 0.05, 1.54, steel, -0.52, 0.68, 0);
+  addBox(0.05, 0.05, 1.54, steel,  0.52, 0.68, 0);
+  addBox(1.08, 0.05, 0.05, steel, 0, 0.68, -0.76);
+  // Rear push handle (+Z is back, -Z is forward)
+  addBox(0.05, 0.36, 0.05, steel, -0.44, 0.84, 0.82);
+  addBox(0.05, 0.36, 0.05, steel,  0.44, 0.84, 0.82);
+  addBox(0.94, 0.05, 0.05, steel,  0, 1.0, 0.86);
+  // Front lantern beacon
+  const lantern = new THREE.Mesh(new THREE.SphereGeometry(0.065, 10, 8), beacon);
+  lantern.position.set(0, 0.72, -0.78);
+  g.add(lantern);
+
+  // 4 rugged wheels
+  const wheels: THREE.Mesh[] = [];
+  const wGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.09, 14);
+  wGeo.rotateZ(Math.PI / 2);
+  for (const [wx, wz] of [[-0.56, -0.52], [0.56, -0.52], [-0.56, 0.52], [0.56, 0.52]]) {
+    const w = new THREE.Mesh(wGeo, tire);
+    w.position.set(wx, 0.18, wz);
+    w.castShadow = true;
+    g.add(w);
+    wheels.push(w);
+  }
+  scene.add(g);
+  return { group: g, wheels, beacon, lx: 6.4, lz: 4.5 };
+})();
+
 export interface FrameInfo { nearest: number; danger: number }
 
 /** One permanent light for flare bursts (adding/removing lights would force shader recompiles). */
@@ -47,6 +98,20 @@ export function updateVisuals(dt: number, t: number): FrameInfo {
   const me = S.me;
   if (!me) return { nearest: 99, danger: 0 };
   const k = Math.min(1, dt * 14);
+
+  /* ---- carriage vehicle ---- */
+  {
+    const c = S.cart;
+    const cg = cartVisual.group;
+    cg.position.x += (c.x - cg.position.x) * k;
+    cg.position.z += (c.z - cg.position.z) * k;
+    cg.rotation.y = c.yaw;
+    const dist = Math.hypot(cg.position.x - cartVisual.lx, cg.position.z - cartVisual.lz);
+    cartVisual.lx = cg.position.x; cartVisual.lz = cg.position.z;
+    for (const w of cartVisual.wheels) w.rotation.x -= dist / 0.18;
+    const loaded = S.items.some(it => it.state === 0 && it.cartSlot >= 0);
+    cartVisual.beacon.color.setHex(c.driverIdx >= 0 ? 0x44e5ff : loaded ? 0xffbb33 : 0x44ee88);
+  }
 
   /* ---- valuables ---- */
   for (const it of S.items) {

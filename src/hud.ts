@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { playSfx } from './audio';
-import { BAL, EYE, SHOP, type ShopKey } from './config';
+import { BAL, CART_SLOTS, DIFFICULTIES, EYE, SHOP, type ShopKey } from './config';
 import { pickItem } from './items';
 import { roomAt } from './map';
 import { drawMap, markExplored } from './minimap';
@@ -87,7 +87,8 @@ export function updateHUD(dt: number): void {
   $('hit').style.opacity = String(hurt * 0.7);
   $('flashfx').style.opacity = String(flashA);
 
-  $('lvl').textContent = `LEVEL ${S.level}${S.map ? '  -  ' + S.map.name.toUpperCase() : ''}`;
+  const diffName = DIFFICULTIES[S.difficulty].name.toUpperCase();
+  $('lvl').textContent = `LEVEL ${S.level} [${diffName}]${S.map ? '  -  ' + S.map.name.toUpperCase() : ''}`;
   $('quota').textContent = `$${S.banked} / $${S.quota}`;
   $('qb').style.width = `${Math.min(100, (S.banked / S.quota) * 100)}%`;
   $('hpb').style.width = `${Math.max(0, (me.hp / maxHealth()) * 100)}%`;
@@ -100,7 +101,7 @@ export function updateHUD(dt: number): void {
   $('room').textContent = room ? room.name.toUpperCase() : '';
 
   // grace period countdown so the player knows the early game is safe-ish
-  const grace = S.isHost && S.phase === 'play' ? Math.ceil(BAL.graceSeconds - S.levelTime) : 0;
+  const grace = S.isHost && S.phase === 'play' ? Math.ceil(DIFFICULTIES[S.difficulty].graceSeconds - S.levelTime) : 0;
   $('grace').textContent = grace > 0 ? `Monsters are still asleep... ${grace}s` : '';
 
   const mic = micStatus();
@@ -124,6 +125,15 @@ export function updateHUD(dt: number): void {
         prompt = `Hold E to revive Player ${b.idx + 1}${pct > 0 ? `  ${pct}%` : ''}`;
         break;
       }
+    }
+  }
+  if (!prompt && me.alive) {
+    const cartCount = S.items.filter(it => it.state === 0 && it.cartSlot >= 0).length;
+    const driving = S.cart.driverIdx === me.idx;
+    if (driving) {
+      prompt = `[C] Release Carriage (${cartCount}/${CART_SLOTS} items)`;
+    } else if (S.cart.driverIdx < 0 && Math.hypot(S.cart.x - me.x, S.cart.z - me.z) < 2.6) {
+      prompt = `[C] Push Carriage (${cartCount}/${CART_SLOTS} items)`;
     }
   }
   $('prompt').textContent = prompt;
