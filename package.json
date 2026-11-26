@@ -1,14 +1,14 @@
 {
-  "name": "deadweight",
-  "version": "0.2.0",
+  "name": "haul",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "bun run tests/map.test.ts"
+    "test": "bun run tests/roomcode.test.ts && bun run tests/map.test.ts && bun run tests/looks.test.ts && bun run tests/sim.test.ts && bun test tests/headless.test.ts"
   },
   "dependencies": {
     "cannon-es": "^0.20.0",

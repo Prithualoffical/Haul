@@ -1,4 +1,4 @@
-import { AV_COLORS, PAD, W } from './config';
+import { AV_COLORS, PAD } from './config';
 import { roomAt } from './map';
 import { S } from './state';
 
@@ -19,7 +19,7 @@ export function markExplored(): void {
 export function drawMap(ctx: CanvasRenderingContext2D, px: number, big: boolean): void {
   const map = S.map, me = S.me;
   if (!map || !me) return;
-  const k = px / W;
+  const k = px / map.size;
   ctx.clearRect(0, 0, px, px);
   ctx.fillStyle = 'rgba(4,8,10,0.82)';
   ctx.fillRect(0, 0, px, px);
@@ -90,6 +90,13 @@ export function drawMap(ctx: CanvasRenderingContext2D, px: number, big: boolean)
     ctx.beginPath();
     ctx.arc(p.x * k, p.z * k, Math.max(3, px * 0.012), 0, Math.PI * 2);
     ctx.fill();
+    if (!p.alive) {                       // a body worth reviving
+      ctx.strokeStyle = '#ff5050';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(p.x * k, p.z * k, Math.max(5, px * 0.02), 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
 
   // you: arrow pointing the way you face (forward = (-sin yaw, -cos yaw))

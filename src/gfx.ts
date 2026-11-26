@@ -5,8 +5,10 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
-/** Add ?lowfx to the URL to disable shadows and post-processing on weak GPUs. */
-export const lowfx = new URLSearchParams(location.search).has('lowfx');
+import { onSettingsChange, settings } from './settings';
+
+/** Low quality (phones, ?lowfx, or the Quality setting) disables shadows and post-processing. */
+export const lowfx = new URLSearchParams(location.search).has('lowfx') || settings.quality === 'low';
 
 export const renderer = new THREE.WebGLRenderer({ antialias: lowfx, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, lowfx ? 1 : 1.5));
@@ -23,10 +25,21 @@ export const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x020304);
 scene.fog = new THREE.FogExp2(0x020304, 0.048);
 
-export const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.05, 80);
+export const camera = new THREE.PerspectiveCamera(settings.fov, innerWidth / innerHeight, 0.05, 80);
 camera.rotation.order = 'YXZ';
 scene.add(camera);
-scene.add(new THREE.AmbientLight(0x9098b0, 0.4));
+export const ambient = new THREE.AmbientLight(0x9098b0, 0.4);
+scene.add(ambient);
+
+/** Apply a location's fog + fill light. */
+export function applyAtmosphere(fog: number, density: number, amb: number, ambI: number): void {
+  const f = scene.fog as THREE.FogExp2;
+  f.color.setHex(fog);
+  f.density = density;
+  (scene.background as THREE.Color).setHex(fog);
+  ambient.color.setHex(amb);
+  ambient.intensity = ambI;
+}
 
 /** The flashlight: a shadow-casting spot attached to the camera. */
 export const flash = new THREE.SpotLight(0xfff1d6, 55, 0, 0.52, 0.5, 1.4);
@@ -76,6 +89,15 @@ if (!lowfx) {
   composer.addPass(grain);
   composer.addPass(new OutputPass());
 }
+
+onSettingsChange(() => { camera.fov = settings.fov; camera.updateProjectionMatrix(); });
+
+/** Flashlight upgrade level widens the beam and brightens it. */
+export function setFlashLevel(level: number): void {
+  flash.angle = 0.52 + 0.04 * level;
+  flash.userData['base'] = 55 + 12 * level;
+}
+flash.userData['base'] = 55;
 
 addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);

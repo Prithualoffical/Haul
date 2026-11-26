@@ -1,13 +1,17 @@
 import { Peer } from 'peerjs';
 import type { DataConnection } from 'peerjs';
+import { makeCode, peerIdFor } from './roomcode';
 import type { InputMsg, ServerMsg } from './types';
 
 export const conns: DataConnection[] = [];
 let peer: Peer | null = null;
 let hostConn: DataConnection | null = null;
 
+export const getPeer = (): Peer | null => peer;
+
 export interface HostHandlers {
-  onCode(id: string): void;
+  /** id = the full peer id (used for voice); code = the short code players type */
+  onCode(id: string, code: string): void;
   onJoin(c: DataConnection): void;
   onData(c: DataConnection, d: unknown): void;
   onLeave(c: DataConnection): void;
@@ -32,32 +36,41 @@ export function sendToHost(m: InputMsg): void {
   if (hostConn && hostConn.open) hostConn.send(m);
 }
 
-/** Host side: open a PeerJS endpoint; friends join with the printed code (WebRTC, no game server needed). */
+/** Host side: open a PeerJS endpoint under a short room code; friends join by typing that code (WebRTC, no game server). */
 export function startHostPeer(h: HostHandlers): void {
-  peer = new Peer();
-  peer.on('open', id => h.onCode(id));
-  peer.on('error', e => h.onError(errText(e)));
-  peer.on('connection', c => {
-    c.on('open', () => { conns.push(c); h.onJoin(c); });
-    c.on('data', (d: unknown) => h.onData(c, d));
-    const gone = (): void => {
-      const i = conns.indexOf(c);
-      if (i >= 0) conns.splice(i, 1);
-      h.onLeave(c);
-    };
-    c.on('close', gone);
-    c.on('error', gone);
-  });
+  let tries = 0;
+  const open = (): void => {
+    const code = makeCode();
+    const p = new Peer(peerIdFor(code));
+    peer = p;
+    p.on('open', (id: string) => h.onCode(id, code));
+    p.on('error', (e: { type?: string; message?: string }) => {
+      if (e.type === 'unavailable-id' && tries++ < 8) { p.destroy(); open(); return; }   // code already taken: roll a new one
+      h.onError(errText(e));
+    });
+    p.on('connection', (c: DataConnection) => {
+      c.on('open', () => { conns.push(c); h.onJoin(c); });
+      c.on('data', (d: unknown) => h.onData(c, d));
+      const gone = (): void => {
+        const i = conns.indexOf(c);
+        if (i >= 0) conns.splice(i, 1);
+        h.onLeave(c);
+      };
+      c.on('close', gone);
+      c.on('error', gone);
+    });
+  };
+  open();
 }
 
 export function startClientPeer(code: string, h: ClientHandlers): void {
   peer = new Peer();
-  peer.on('error', e => h.onError(errText(e)));
-  peer.on('open', id => {
+  peer.on('error', (e: { type?: string; message?: string }) => h.onError(errText(e)));
+  peer.on('open', (id: string) => {
     h.onOpen(id);
-    hostConn = peer!.connect(code.trim(), { reliable: true });
+    hostConn = peer!.connect(peerIdFor(code), { reliable: true });
     hostConn.on('data', (d: unknown) => h.onData(d));
     hostConn.on('close', () => h.onClose());
-    hostConn.on('error', e => h.onError(errText(e)));
+    hostConn.on('error', (e: { type?: string; message?: string }) => h.onError(errText(e)));
   });
 }

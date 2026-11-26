@@ -1,13 +1,13 @@
-import { DIRS, W } from './config';
+import { DIRS } from './config';
 import type { Rect } from './types';
-
-export const cellOf = (v: number): number => Math.max(0, Math.min(W - 1, Math.floor(v)));
 
 /** 1 m navigation grid over the arena + collision / line-of-sight helpers. Pure logic, no rendering. */
 export class Nav {
-  readonly blocked = new Uint8Array(W * W);
+  readonly blocked: Uint8Array;
 
-  constructor(readonly solids: Rect[]) {
+  constructor(readonly solids: Rect[], readonly size: number) {
+    const W = size;
+    this.blocked = new Uint8Array(W * W);
     for (let i = 0; i < W; i++) {
       for (let j = 0; j < W; j++) {
         const cx = i + 0.5, cz = j + 0.5;
@@ -21,11 +21,14 @@ export class Nav {
     }
   }
 
+  cell(v: number): number { return Math.max(0, Math.min(this.size - 1, Math.floor(v))); }
+
   isFree(x: number, z: number): boolean {
-    return x > 0 && z > 0 && x < W && z < W && this.blocked[cellOf(z) * W + cellOf(x)] === 0;
+    return x > 0 && z > 0 && x < this.size && z < this.size && this.blocked[this.cell(z) * this.size + this.cell(x)] === 0;
   }
 
   private neighbours(c: number, out: number[]): void {
+    const W = this.size;
     out.length = 0;
     const cx = c % W, cz = (c / W) | 0;
     for (const [dx, dz] of DIRS) {
@@ -40,7 +43,8 @@ export class Nav {
 
   /** Shortest 8-way path (BFS) between two world positions, as cell-centre waypoints. */
   findPath(sx: number, sz: number, tx: number, tz: number): { x: number; z: number }[] | null {
-    const s = cellOf(sz) * W + cellOf(sx), t = cellOf(tz) * W + cellOf(tx);
+    const W = this.size;
+    const s = this.cell(sz) * W + this.cell(sx), t = this.cell(tz) * W + this.cell(tx);
     if (this.blocked[t]) return null;
     const prev = new Int16Array(W * W).fill(-2);
     const q: number[] = [s];
@@ -62,11 +66,12 @@ export class Nav {
     return path.reverse();
   }
 
-  /** Fraction of all free cells reachable from a start point (used to reject maps with sealed pockets). */
-  reachableRatio(sx: number, sz: number): number {
-    const s = cellOf(sz) * W + cellOf(sx);
-    if (this.blocked[s]) return 0;
+  /** 1 for every cell reachable on foot from the start point, else 0. */
+  reachMap(sx: number, sz: number): Uint8Array {
+    const W = this.size;
     const seen = new Uint8Array(W * W);
+    const s = this.cell(sz) * W + this.cell(sx);
+    if (this.blocked[s]) return seen;
     const q: number[] = [s];
     const nb: number[] = [];
     seen[s] = 1;
@@ -74,9 +79,23 @@ export class Nav {
       this.neighbours(q[h], nb);
       for (const n of nb) if (!seen[n]) { seen[n] = 1; q.push(n); }
     }
-    let free = 0;
-    for (let i = 0; i < W * W; i++) if (!this.blocked[i]) free++;
-    return q.length / Math.max(1, free);
+    return seen;
+  }
+
+  /** True if the cell under (x, z) can be walked to from the reach map's start. */
+  reachable(reach: Uint8Array, x: number, z: number): boolean {
+    return reach[this.cell(z) * this.size + this.cell(x)] === 1;
+  }
+
+  /** Fraction of all free cells reachable from a start point (used to reject maps with sealed pockets). */
+  reachableRatio(sx: number, sz: number): number {
+    const W = this.size;
+    const seen = this.reachMap(sx, sz);
+    let free = 0, got = 0;
+    for (let i = 0; i < W * W; i++) {
+      if (!this.blocked[i]) { free++; if (seen[i]) got++; }
+    }
+    return got / Math.max(1, free);
   }
 
   /** Line of sight; only tall obstacles (walls, pillars, shelves) block it - tables and crates don't. */

@@ -14,7 +14,8 @@ declare module 'three' {
   export class ConeGeometry extends BufferGeometry {} export class TorusGeometry extends BufferGeometry {}
   export class CircleGeometry extends BufferGeometry {} export class LatheGeometry extends BufferGeometry {}
   export const ACESFilmicToneMapping: number; export const PCFSoftShadowMap: number;
-  export const RepeatWrapping: number; export const SRGBColorSpace: string;
+  export const RepeatWrapping: number; export const SRGBColorSpace: string; export const AdditiveBlending: number; export const DoubleSide: number;
+  export class ConeGeometryX extends BufferGeometry {}
 }
 declare module 'three/addons/postprocessing/EffectComposer.js' { export class EffectComposer { [k: string]: any; constructor(...a: any[]) } }
 declare module 'three/addons/postprocessing/RenderPass.js' { export class RenderPass { constructor(...a: any[]) } }
@@ -27,6 +28,7 @@ declare module 'cannon-es' {
   export class Plane extends Any {} export class World extends Any {} export class ContactEquation extends Any {}
 }
 declare module 'peerjs' {
-  export interface DataConnection { peer: string; open: boolean; send(d: unknown): void; on(ev: string, cb: (...a: any[]) => void): void }
-  export class Peer { constructor(...a: any[]); on(ev: string, cb: (...a: any[]) => void): void; connect(id: string, o?: unknown): DataConnection }
+  export interface DataConnection { peer: string; open: boolean; send(d: unknown): void; close(): void; on(ev: string, cb: (...a: any[]) => void): void }
+  export interface MediaConnection { peer: string; answer(s?: MediaStream): void; close(): void; on(ev: string, cb: (...a: any[]) => void): void }
+  export class Peer { id: string; constructor(...a: any[]); on(ev: string, cb: (...a: any[]) => void): void; connect(id: string, o?: unknown): DataConnection; call(id: string, s: MediaStream): MediaConnection; destroy(): void }
 }

@@ -2,65 +2,165 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DEADWEIGHT</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>HAUL</title>
 <style>
-  html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#cfd2d6;font-family:ui-monospace,Menlo,Consolas,monospace}
+  html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#cfd2d6;font-family:ui-monospace,Menlo,Consolas,monospace;touch-action:none;-webkit-user-select:none;user-select:none}
   canvas{display:block}
-  .panel{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.84);z-index:20;text-align:center;gap:12px}
+  .panel{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.86);z-index:20;text-align:center;gap:12px;overflow:auto;padding:16px;box-sizing:border-box}
   h1{letter-spacing:.4em;font-size:44px;margin:0;color:#c33;text-shadow:0 0 18px #600}
-  button,input{font:inherit;padding:10px 18px;background:#15181c;color:#ddd;border:1px solid #444;border-radius:4px}
-  button{cursor:pointer} button:hover{background:#262b31;border-color:#c33}
+  button,input,select{font:inherit;padding:10px 18px;background:#15181c;color:#ddd;border:1px solid #444;border-radius:4px}
+  button{cursor:pointer} button:hover:not(:disabled){background:#262b31;border-color:#c33}
+  button:disabled{opacity:.55;cursor:default}
+  .row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+  #how{display:none;max-width:560px;text-align:left;font-size:13px;line-height:1.55;background:#0d1013;border:1px solid #333;padding:12px 16px;border-radius:6px}
+  #how b{color:#d9b13a}
+  #setbox{display:grid;grid-template-columns:auto 200px;gap:10px 14px;align-items:center;text-align:left;margin-top:6px}
+  #setbox input[type=range]{padding:0;width:200px}
+  #qnote{display:none;font-size:12px;color:#d9b13a}
+
   #hud{position:fixed;inset:0;pointer-events:none;z-index:10;display:none}
   #tl{position:absolute;top:14px;left:16px;min-width:230px;text-shadow:0 0 4px #000}
   .bar{height:10px;background:rgba(0,0,0,.5);margin:4px 0 8px;border:1px solid #444}
   .bar>div{height:100%;width:100%}
   #hpb{background:#c33} #stb{background:#d9b13a}
   #room{margin-top:6px;font-size:12px;letter-spacing:.2em;color:#9db0a8}
-  #tr{position:absolute;top:14px;right:16px;text-align:right;font-size:13px;opacity:.9;text-shadow:0 0 4px #000}
+  #flares{font-size:13px;color:#ffe9a0;margin-top:4px}
+  #tr{position:absolute;top:14px;right:16px;text-align:right;font-size:13px;opacity:.9;text-shadow:0 0 4px #000;line-height:1.5}
+  #mic{color:#8fd;} #speak{color:#d9b13a}
   #cross{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2px;border-radius:50%;background:rgba(255,255,255,.6)}
   #info{position:absolute;left:0;right:0;bottom:78px;text-align:center;font-size:16px;color:#fff;text-shadow:0 0 6px #000}
+  #prompt{position:absolute;left:0;right:0;bottom:104px;text-align:center;font-size:18px;color:#7ff0a8;text-shadow:0 0 8px #000}
+  #grace{position:absolute;left:0;right:0;top:64px;text-align:center;font-size:13px;color:#9db0a8;text-shadow:0 0 4px #000}
   #hint{position:absolute;left:0;right:0;bottom:16px;text-align:center;font-size:12px;opacity:.6}
   #feed{position:absolute;left:16px;bottom:16px;font-size:13px;max-width:360px}
   #feed div{margin-top:4px;text-shadow:0 0 4px #000}
+  #title{position:absolute;left:0;right:0;top:16%;text-align:center;font-size:40px;letter-spacing:.25em;color:#e8e8e8;text-shadow:0 0 18px #000,0 0 40px #500;opacity:0;transition:opacity 1.4s;padding:0 16px;text-transform:uppercase}
+  #title small{display:block;font-size:14px;letter-spacing:.5em;color:#c55;margin-bottom:6px}
+  #title em{display:block;font-style:normal;font-size:14px;letter-spacing:.12em;color:#aab;margin-top:10px;text-transform:none}
   #banner{position:absolute;left:0;right:0;top:26%;text-align:center;font-size:28px;color:#fff;text-shadow:0 0 12px #000;padding:0 20px}
+  #restartbtn{display:none;position:absolute;left:50%;top:40%;transform:translateX(-50%);pointer-events:auto}
   #hit{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(120,0,0,.1) 30%,rgba(200,0,0,.9) 100%);opacity:0}
+  #flashfx{position:absolute;inset:0;background:#fff;opacity:0}
   #mini{position:absolute;right:16px;bottom:16px;width:190px;height:190px;border-radius:2px;opacity:.92}
   #minilabel{position:absolute;right:16px;bottom:210px;font-size:11px;opacity:.55;width:190px;text-align:right}
   #bigmap{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:15;pointer-events:none}
   #bigmap canvas{width:min(80vh,80vw);height:min(80vh,80vw);box-shadow:0 0 40px #000}
+
+  #shop{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(0,0,0,.72);pointer-events:auto}
+  #shop h2{margin:0;letter-spacing:.3em;color:#7ff0a8}
+  #wallet{font-size:20px;color:#ffe9a0;margin-bottom:6px}
+  #shopitems{display:flex;flex-direction:column;gap:6px;width:min(560px,92vw)}
+  .shopitem{display:flex;align-items:center;gap:12px;text-align:left;width:100%}
+  .shopitem .sk{background:#262b31;border:1px solid #555;border-radius:3px;padding:2px 8px}
+  .shopitem .sn{flex:1}
+  .shopitem .sn small{display:block;opacity:.6;font-size:11px}
+  .shopitem .sp{color:#ffe9a0}
+  .shopitem.poor .sp{color:#c66}
+
+  /* touch controls */
+  #touch{display:none;position:fixed;inset:0;z-index:12;pointer-events:none}
+  #lookzone{position:absolute;right:0;top:0;width:55%;height:100%;pointer-events:auto}
+  #stick{position:absolute;left:28px;bottom:36px;width:130px;height:130px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);pointer-events:auto}
+  #knob{position:absolute;left:35px;top:35px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.35)}
+  .tb{position:absolute;pointer-events:auto;width:68px;height:68px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:rgba(0,0,0,.45);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;padding:0}
+  #tb-grab{right:26px;bottom:120px;width:84px;height:84px}
+  #tb-throw{right:122px;bottom:60px}
+  #tb-use{right:122px;bottom:150px}
+  #tb-flare{right:26px;bottom:220px}
+  #tb-map{right:26px;top:70px;width:52px;height:52px}
 </style>
 </head>
 <body>
 <div id="lobby" class="panel">
-  <h1>DEADWEIGHT</h1>
-  <div style="opacity:.7;max-width:540px">Loot the manor. Haul it back to the green pad. Don't make noise. Don't get caught.</div>
-  <button id="solo">PLAY SOLO</button>
-  <button id="host">HOST CO-OP GAME</button>
-  <div><input id="code" placeholder="paste host code"> <button id="join">JOIN</button></div>
+  <h1>HAUL</h1>
+  <div style="opacity:.7;max-width:560px">Loot the haunted building. Haul valuables back to the green pad. Stay quiet. Up to 8 players, with proximity voice chat.</div>
+  <div class="row">
+    <label for="mapsel">Map:</label>
+    <select id="mapsel">
+      <option value="random">A different location every level</option>
+      <option value="manor">Blackwood Manor</option>
+      <option value="asylum">Saint Mercy Asylum</option>
+      <option value="facility">Kepler Research Facility</option>
+      <option value="warehouse">Port 9 Cargo Terminal</option>
+      <option value="hotel">Grand Ostara Hotel</option>
+    </select>
+  </div>
+  <div class="row"><button id="solo">PLAY SOLO</button><button id="host">HOST CO-OP GAME</button></div>
+  <div class="row"><input id="code" placeholder="room code, e.g. K7QP2" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase;letter-spacing:.2em;width:180px;text-align:center"> <button id="join">JOIN</button></div>
   <div id="status" style="min-height:20px;color:#d9b13a"></div>
+  <button id="howbtn" style="padding:6px 14px">How to play</button>
+  <div id="how">
+    <b>Goal:</b> reach the money quota by bringing valuables onto the green extraction pad.<br>
+    <b>Move:</b> WASD, Shift to sprint (uses stamina). <b>Grab:</b> hold left mouse. <b>Throw:</b> right mouse. Rough handling lowers an item's value.<br>
+    <b>Noise:</b> running and crashing items attract monsters. Walk slowly near them. Monsters sleep for the first 28 seconds.<br>
+    <b>Flares [F]:</b> stun monsters for 3.5s so you can escape. Buy more in the shop.<br>
+    <b>Revive [hold E]:</b> stand next to a dead teammate for 3 seconds.<br>
+    <b>Voice [V]:</b> mute/unmute your mic. Teammates sound quieter and directional with distance. Allow the mic when asked.<br>
+    <b>Map [M]:</b> rooms appear as you explore them. Hunting monsters show as red dots only when close.<br>
+    <b>Between levels:</b> spend the team wallet in the shop (host buys: keys 1-6, Enter to continue).
+  </div>
+  <div id="lobbytip" style="font-size:12px;opacity:.55"></div>
 </div>
-<div id="resume" class="panel" style="display:none"><h1 style="font-size:28px">PAUSED</h1><div>Click to resume</div></div>
+
+<div id="resume" class="panel" style="display:none">
+  <h1 style="font-size:28px">PAUSED</h1>
+  <div id="setbox">
+    <label for="set-sens">Look sensitivity</label><input id="set-sens" type="range" min="0.3" max="2.5" step="0.05">
+    <label for="set-vol">Master volume</label><input id="set-vol" type="range" min="0" max="1" step="0.05">
+    <label for="set-voice">Teammate voice volume</label><input id="set-voice" type="range" min="0" max="1.5" step="0.05">
+    <label for="set-fov">Field of view</label><input id="set-fov" type="range" min="60" max="100" step="1">
+    <label for="set-quality">Graphics quality</label>
+    <select id="set-quality"><option value="high">High (shadows + bloom)</option><option value="low">Low (faster)</option></select>
+    <label for="set-voiceon">Use voice chat (next game)</label><input id="set-voiceon" type="checkbox">
+  </div>
+  <div id="inviterow" style="display:none">Room code: <b id="invcode" style="letter-spacing:.2em;color:#7ff0a8"></b> <button id="copylink">Copy invite link</button></div>
+  <div id="qnote">Graphics quality changes apply after you reload the page.</div>
+  <button id="resumebtn">RESUME</button>
+</div>
+
 <div id="hud">
   <div id="hit"></div>
+  <div id="flashfx"></div>
   <div id="tl">
     <div id="lvl">LEVEL 1</div>
     <div id="quota">$0 / $0</div>
     <div class="bar"><div id="qb" style="background:#3c9;width:0%"></div></div>
     HEALTH<div class="bar"><div id="hpb"></div></div>
     STAMINA<div class="bar"><div id="stb"></div></div>
+    <div id="flares"></div>
     <div id="room"></div>
   </div>
-  <div id="tr"><div id="codeShow"></div><div id="plist"></div></div>
+  <div id="tr"><div id="codeShow"></div><div id="plist"></div><div id="mic"></div><div id="speak"></div></div>
   <div id="cross"></div>
+  <div id="grace"></div>
+  <div id="prompt"></div>
   <div id="info"></div>
+  <div id="title"></div>
   <div id="banner"></div>
+  <button id="restartbtn">RESTART</button>
   <div id="feed"></div>
   <div id="minilabel">[M] full map</div>
   <canvas id="mini" width="190" height="190"></canvas>
-  <div id="hint">WASD move - SHIFT sprint - mouse look - hold LMB grab - RMB throw - M map - noise attracts monsters</div>
+  <div id="hint">WASD move - SHIFT sprint - hold LMB grab - RMB throw - E revive - F flare - V mic - M map</div>
+  <div id="shop">
+    <h2>SAFEHOUSE SHOP</h2>
+    <div id="wallet"></div>
+    <div id="shopitems"></div>
+    <button id="shopnext" style="margin-top:8px"></button>
+  </div>
 </div>
 <div id="bigmap"><canvas id="bigcv" width="640" height="640"></canvas></div>
+
+<div id="touch">
+  <div id="lookzone"></div>
+  <div id="stick"><div id="knob"></div></div>
+  <button class="tb" id="tb-grab">GRAB</button>
+  <button class="tb" id="tb-throw">THROW</button>
+  <button class="tb" id="tb-use">REVIVE</button>
+  <button class="tb" id="tb-flare">FLARE</button>
+  <button class="tb" id="tb-map">MAP</button>
+</div>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
